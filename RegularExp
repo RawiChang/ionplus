@@ -1,0 +1,27 @@
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class RegularExp {
+
+  /**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		/*
+		 * 全角カナ・全角ピリオド・全角カンマ・全角スペース チェックを行う
+		 */
+		String test = "アア　．　，";
+		boolean flag = test.matches("^[ァ-ヶ　．，]+$");
+		System.out.println(flag);
+
+		/*
+		 * 漢字・ひらがな・全角カナ・半角英数・記号
+		 */
+		String test1 = "位置 ~ お母さん !!! アｱ";
+		// 0-9_半角スペース_半角記号
+		Pattern p = Pattern.compile("^[一-龠ぁ-ゞァ-ヶa-zA-Z0-9 \\p{Punct}]+$");
+		Matcher m = p.matcher(test1);
+		System.out.println(m.find());
+
+	}
+}
