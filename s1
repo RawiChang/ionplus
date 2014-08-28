@@ -1,0 +1,170 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+
+/**
+ * @author GoldenAge
+ * 本番モジュール。
+ * ミラーラビン素数判定法を利用しました。
+ */
+public class GoldenAge {
+	private static final BigInteger ZERO = new BigInteger("0");
+	private static final BigInteger ONE = new BigInteger("1");
+	private static final BigInteger TWO = new BigInteger("2");
+	private static final BigInteger THREE = new BigInteger("3");
+	private static final BigInteger FOUR = new BigInteger("4");
+	private static final BigInteger SIX = new BigInteger("6");
+	private static final BigInteger TEN = new BigInteger("10");
+
+	public static void main(String args[]) throws Exception {
+		int n = Integer.parseInt(args[0]);
+
+		ArrayList<BigInteger> fiveDigitList = new ArrayList<BigInteger>();
+		ArrayList<BigInteger> sixDigitList = new ArrayList<BigInteger>();
+
+		BigInteger tempMax = TEN.pow(n).subtract(THREE);
+		BigInteger a = null;
+		BigInteger b = null;
+		BigInteger a2 = null;
+		BigInteger b2= null;
+
+		BigInteger tempNum = TEN.pow(4).add(ONE);
+		while (TEN.pow(5).compareTo(tempNum) == 1) {
+			if (isPrimeBigInt(tempNum, 3)) {
+				fiveDigitList.add(tempNum);
+			}
+			tempNum = tempNum.add(TWO);
+		}
+
+		int counter = 1;
+		loop1: while (tempMax.compareTo(ZERO) != 0) {
+			for (int i = 0; i < fiveDigitList.size(); i++) {
+				b = fiveDigitList.get(i);
+				BigInteger mod = tempMax.mod(b);
+				if (mod.compareTo(ZERO) == 0) {
+					a = tempMax.divide(b);
+					if (isPrimeBigInt(a, 3)) {
+						break loop1;
+					}
+				}
+			}
+			switch(counter) {
+				case 1: tempMax = tempMax.subtract(SIX); break;
+				case 2: tempMax = tempMax.subtract(TWO); break;
+				case 3: tempMax = tempMax.subtract(SIX); break;
+				case 4: tempMax = tempMax.subtract(FOUR); break;
+				case 5: tempMax = tempMax.subtract(TWO); break;
+				case 6: tempMax = tempMax.subtract(FOUR); break;
+				case 7: tempMax = tempMax.subtract(TWO); break;
+				case 8: tempMax = tempMax.subtract(FOUR); counter=0; break;
+			}
+			counter++;
+		}
+
+
+		BigInteger tempMax2 = TEN.pow(n).subtract(THREE);
+		if (n < 251) {
+			BigInteger tempNum2 = TEN.pow(5).add(ONE);
+			while (TEN.pow(6).compareTo(tempNum2) == 1) {
+				if (isPrimeBigInt(tempNum2, 3)) {
+					sixDigitList.add(tempNum2);
+				}
+				tempNum2 = tempNum2.add(TWO);
+			}
+
+			int counter2 = 1;
+			loop2: while (tempMax2.compareTo(tempMax) != -1) {
+				for (int j = 0; j < sixDigitList.size(); j++) {
+					b2 = sixDigitList.get(j);
+					if (tempMax2.mod(b2).compareTo(ZERO) == 0) {
+						a2 = tempMax2.divide(b2);
+						if (isPrimeBigInt(a2, 3)) {
+							break loop2;
+						}
+					}
+				}
+				switch(counter2) {
+				case 1: tempMax2 = tempMax2.subtract(SIX); break;
+				case 2: tempMax2 = tempMax2.subtract(TWO); break;
+				case 3: tempMax2 = tempMax2.subtract(SIX); break;
+				case 4: tempMax2 = tempMax2.subtract(FOUR); break;
+				case 5: tempMax2 = tempMax2.subtract(TWO); break;
+				case 6: tempMax2 = tempMax2.subtract(FOUR); break;
+				case 7: tempMax2 = tempMax2.subtract(TWO); break;
+				case 8: tempMax2 = tempMax2.subtract(FOUR); counter2=0; break;
+				}
+				counter2++;
+			}
+		}
+
+		if (tempMax2.compareTo(tempMax) == 1) {
+			tempMax = tempMax2;
+			a = a2;
+			b = b2;
+		}
+
+
+		File file = new File("result.txt");
+		FileWriter fileWriter = new FileWriter(file);
+		BufferedWriter bw = new BufferedWriter(fileWriter);
+		PrintWriter pw = new PrintWriter(bw);
+
+		pw.println("A:" + a);
+		pw.println("B:" + b);
+		pw.println("Y:" + tempMax);
+
+		pw.close();
+		System.out.println("end");
+	}
+
+	public static boolean isPrimeBigInt(BigInteger checkNumber, int tryNumber) {
+		BigInteger d = (checkNumber.subtract(ONE)).divide(TWO);
+		int s = 0;
+		while (d.mod(TWO).compareTo(ZERO) == 0) {
+			d = d.divide(TWO);
+			s++;
+		}
+		for (int i = 0; i < tryNumber; i++) {
+			boolean isP = false;
+			BigInteger sub2 = checkNumber.subtract(TWO);
+			BigDecimal forRandom = new BigDecimal(sub2);
+			BigInteger randamed = forRandom.multiply(
+					new BigDecimal(Math.random())).toBigInteger();
+			BigInteger a = randamed.add(ONE);
+
+			BigInteger r = powModBigInt(a, d, checkNumber);
+			if (r.compareTo(ONE) == 0
+					|| r.compareTo(checkNumber.subtract(ONE)) == 0) {
+				isP = true;
+			}
+			r = powModBigInt(r, TWO, checkNumber);
+			for (int j = 0; j < s; j++) {
+				if (r.compareTo(checkNumber.subtract(ONE)) == 0) {
+					isP = true;
+				}
+				r = powModBigInt(r, TWO, checkNumber);
+			}
+			if (!isP) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static BigInteger powModBigInt(BigInteger base, BigInteger power,
+			BigInteger mod) {
+		BigInteger result = ONE;
+		while (power.compareTo(ZERO) == 1) {
+			if (power.mod(TWO).intValue() == 1) {
+				result = (result.multiply(base)).mod(mod);
+			}
+			base = (base.pow(2)).mod(mod);
+			power = power.divide(TWO);
+		}
+		return result;
+	}
+}
